@@ -5,7 +5,9 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
+env:
+  vcpkg-ref: 2020-11
+  vcpkg-path: vcpkg-${{env.vcpkg-ref}}
 jobs:
   build:
 
@@ -15,8 +17,8 @@ jobs:
       - uses: actions/checkout@v2
         with:
             repository: microsoft/vcpkg
-            path: vcpkg-202007
-            ref: '2020.07'
+            path: ${{env.vcpkg-path}}
+            ref: ${{env.vcpkg-ref}}
      
       # Checkout repository
       - uses: actions/checkout@v2
@@ -41,8 +43,8 @@ jobs:
           # Response file stored in source control, it provides the list of ports and triplet(s).
           vcpkgArguments: '@${{ env.VCPKGRESPONSEFILE }}'
           # Location of the vcpkg as submodule of the repository.
-          vcpkgDirectory: '${{ github.workspace }}\vcpkg-202007'
-          vcpkgGitCommitId: '56fffbe49dfb4dd8fae0940f272c5fd2b86be991'
+          vcpkgDirectory: '${{ github.workspace }}\${{env.vcpkg-path}}'
+          #vcpkgGitCommitId: '56fffbe49dfb4dd8fae0940f272c5fd2b86be991' # Should not be needed
           # Since the cache must be invalidated when content of the response file changes, let's
           # compute its hash and append this to the computed cache's key.
           appendedCacheKey: ${{ hashFiles( env.VCPKGRESPONSEFILE ) }}

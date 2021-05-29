@@ -229,10 +229,14 @@ namespace movetk_core
         typedef typename movetk_grid_iterator::reference reference;
         typedef typename movetk_grid_iterator::pointer pointer;
         typedef typename movetk_grid_iterator::difference_type difference_type;
+        using ColumnIterator = typename Container::value_type::const_iterator;
 
         explicit movetk_grid_iterator(pointer value) : rit(value)
         {
             cit = rit->cbegin();
+        }
+        explicit movetk_grid_iterator(pointer value, ColumnIterator colIt) : rit(value),cit(colIt)
+        {
         }
 
         pointer base() const { return rit; }

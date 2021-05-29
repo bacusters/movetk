@@ -141,9 +141,9 @@ namespace movetk_algorithms {
             {
                 std::vector<Dist_t> distances;
                 movetk_core::movetk_back_insert_iterator backInsert(distances);
-                movetk_core::get_distances<GeometryKernel,decltype(pointsBegin), decltype(backInsert), PointDistanceFunc>(pointsBegin, pointsEnd, backInsert);
+                movetk_core::get_distances<GeometryKernel,decltype(pointsBegin), decltype(backInsert), PointDistanceFunc>(pointsBegin, pointsEnd, backInsert, false);
                 std::vector<Duration> timeDiffs;
-                movetk_core::get_time_diffs(timeBegin, timeEnd, movetk_core::movetk_back_insert_iterator(timeDiffs));
+                movetk_core::get_time_diffs(timeBegin, timeEnd, movetk_core::movetk_back_insert_iterator(timeDiffs),false);
 
                 movetk_core::get_speeds<GeometryKernel>(timeDiffs.begin(), timeDiffs.end(), distances.begin(), movetk_core::movetk_back_insert_iterator(speeds));
             }

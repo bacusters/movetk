@@ -381,7 +381,7 @@ TEST_CASE("Check free space diagram 1", "[free_space_diagram_1]") {
                 MovetkGeometryKernel::MovetkVector v = std::get<IntersectionTraits::Attributes::POINT>(intersection) -
                                                       std::get<IntersectionTraits::Attributes::POINT>(*eit);
                 REQUIRE(v * v < MOVETK_EPS);
-                eit++;
+                ++eit;
                 num_intersections++;
                 does_intersect = true;
             }
@@ -539,7 +539,7 @@ TEST_CASE("Check free space diagram 2", "[free_space_diagram_2]") {
 
     std::size_t cell_idx = 1;
     auto eit = movetk_core::movetk_grid_iterator<ExpectedFsd>(expected.begin());
-    auto it = expected.begin();
+    //auto it = expected.begin();
     auto evit = movetk_core::movetk_grid_iterator<ExpectedVertices>(expected_free_vertices.begin());
     std::cout << "CellId, EdgeID, Intersection_Ratio, Enclosed, Intersects\n";
     for (auto cell: fsd) {
@@ -576,7 +576,7 @@ TEST_CASE("Check free space diagram 2", "[free_space_diagram_2]") {
                 evit++;
             }
             std::cout << "}\n";
-            it++;
+            //it++;
         }
         cell_idx++;
     }

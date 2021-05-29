@@ -156,13 +156,13 @@ namespace movetk_core {
         /*typename = movetk_core::requires_size_t<
         typename OutputIterator::value_type> */
     >
-        void get_time_diffs(InputIterator first, InputIterator beyond, OutputIterator iter) {
+        void get_time_diffs(InputIterator first, InputIterator beyond, OutputIterator iter, bool include_first = true) {
         //TODO Add support for initial value
         //TODO check std::adjacent_difference
         //ASSERT_RANDOM_ACCESS_ITERATOR(InputIterator);
         InputIterator pit = first;
         InputIterator cit = first + 1;
-        //*iter = 0; //TODO: why do we do this?
+        if(include_first) *iter = 0;
         while (cit != beyond) {
             *iter = *cit - *pit;
             pit = cit;
@@ -186,12 +186,12 @@ namespace movetk_core {
         typename InputIterator::value_type>,
         typename = movetk_core::requires_NT<GeometryKernel,
         typename OutputIterator::value_type> >
-        void get_distances(InputIterator first, InputIterator beyond, OutputIterator iter) {
+        void get_distances(InputIterator first, InputIterator beyond, OutputIterator iter, bool include_first = true) {
         //ASSERT_RANDOM_ACCESS_ITERATOR(InputIterator);
         PointDistanceFunc distance;
         InputIterator pit = first;
         InputIterator cit = std::next(first);
-        //*iter = 0;
+        if(include_first) *iter = 0;
         while (cit != beyond) {
             *iter = distance(*pit, *cit);
             pit = cit;
@@ -251,8 +251,8 @@ namespace movetk_core {
             else {
                 *iter = *CurrDit / *CurrTit;
             }
-            CurrDit++;
-            CurrTit++;
+            ++CurrDit;
+            ++CurrTit;
         }
     }
 
@@ -534,7 +534,11 @@ namespace movetk_core {
         typename = movetk_core::requires_NT<GeometryKernel,
         typename InputIterator::value_type::second_type> >
         InputIterator merge_intervals(InputIterator first, InputIterator beyond, bool sorted = false) {
+
+        if (first == beyond || std::next(first) == beyond) return first;
+
         if (!sorted)
+            // Sort by descending first value, or second value if tied.
             std::sort(first, beyond, [](auto a, auto b) {
             if (a.first != b.first)
                 return a.first > b.first;
@@ -547,18 +551,19 @@ namespace movetk_core {
         InputIterator last = beyond - 1;
         std::size_t moves = 0;
         while (curr != last) {
+            // Next element overlaps with current
             if (next->second >= curr->first) {
                 moves++;
-                if (curr->second > next->second)
-                    *curr = std::make_pair(next->first, curr->second);
-                else
-                    *curr = std::make_pair(next->first, next->second);
-                *next = std::move(*(next + moves));
-                last--;
+                *curr = std::make_pair(next->first, std::max(curr->second,next->second));
+                if(next + moves != beyond)
+                {
+                    *next = std::move(*(next + moves));
+                }
+                --last;
             }
             else {
-                curr++;
-                next++;
+                ++curr;
+                ++next;
                 if (moves > 0)
                     *next = std::move(*(next + moves));
             }

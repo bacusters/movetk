@@ -29,9 +29,9 @@ using std::tuple;
 #include <vector>
 using std::vector;
 
-#include "movetk/ColumnarTrajectory.h"
-#include "movetk/TabularTrajectory.h"
-#include "movetk/TuplePrinter.h"
+#include "movetk/ds/ColumnarTrajectory.h"
+#include "movetk/ds/TabularTrajectory.h"
+#include "movetk/io/TuplePrinter.h"
 
 #include "movetk/geom/BoostGeometryTraits.h"
 #include "movetk/geom/BoostGeometryWrapper.h"
@@ -97,12 +97,13 @@ TEST_CASE( "TabularTrajectory field iterator", "[tabulartrajectory_field_iterato
 
     TabularTrajectory<string, int, float> t { data };
 
-    int i = 0;
+    /*int i = 0;
     std::cout << "tabular trj first col: ";
     for (auto it = t.begin<0>(); it != t.end<0>(); ++it) {
         std::cout << *it << " ";
         ++i;
-    }
+    }*/
+    const auto i = std::distance(t.begin<0>(), t.end<0>());
 
     auto expected = {"abc", "def"};
     REQUIRE( std::equal(t.begin<0>(), t.end<0>(), std::begin(expected)) );

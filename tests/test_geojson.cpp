@@ -53,6 +53,7 @@ TEST_CASE("Test GeoJSON", "[test_geojson]")
     feature1.Accept(writer);
     geojson = geojson + strbuf.GetString() + ",";
     strbuf.Clear();
+    writer.Reset(strbuf);
     feature2.Accept(writer);
     geojson = geojson + strbuf.GetString();
     geojson = geojson + "]}";

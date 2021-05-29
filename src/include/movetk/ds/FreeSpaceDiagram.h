@@ -306,7 +306,8 @@ namespace movetk_support {
         }
 
         typename FreeSpaceDiagramTraits::iterator end() {
-            return typename FreeSpaceDiagramTraits::iterator(std::end(rows));
+            auto lastRowIt = std::prev(std::end(rows));
+            return typename FreeSpaceDiagramTraits::iterator(lastRowIt,lastRowIt->cend());
         }
 
 

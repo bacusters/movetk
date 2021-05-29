@@ -195,38 +195,37 @@ namespace movetk_algorithms
         typename InterpolationTraits::MovetkPoint ORIGIN = make_point({0, 0});
 
     public:
-        Interpolator(typename InterpolationTraits::NT reflat,
-                     typename InterpolationTraits::NT reflon)
+        using NT = typename InterpolationTraits::NT;
+        Interpolator(NT reflat, NT reflon)
         {
             ref = typename InterpolationTraits::GeoProjection(reflat, reflon);
         }
 
         template <class TSIterator, class OutputIterator>
         void operator()(typename InterpolationTraits::ProbePoint &probe_u,
-                        typename InterpolationTraits::ProbePoint &probe_v,
+            typename InterpolationTraits::ProbePoint &probe_v,
                         TSIterator first, TSIterator beyond, OutputIterator result)
         {
-
+            using Point = typename InterpolationTraits::MovetkPoint;
+            using GeomKernel = typename InterpolationTraits::GeometryTraits;
             auto lat_u = std::get<LatIdx>(probe_u);
             auto lon_u = std::get<LonIdx>(probe_u);
-            typename InterpolationTraits::MovetkPoint p_u = movetk_core::get_point<InterpolationTraits>(lat_u, lon_u,
-                                                                                                        ref);
+            Point p_u = movetk_core::get_point<InterpolationTraits>(lat_u, lon_u, ref);
 
             auto lat_v = std::get<LatIdx>(probe_v);
             auto lon_v = std::get<LonIdx>(probe_v);
-            typename InterpolationTraits::MovetkPoint p_v = movetk_core::get_point<InterpolationTraits>(lat_v, lon_v,
-                                                                                                        ref);
-
-            typename InterpolationTraits::MovetkVector velocity_u = movetk_core::get_velocity<typename InterpolationTraits::GeometryTraits>(
+            auto p_v = movetk_core::get_point<InterpolationTraits>(lat_v, lon_v, ref);
+            // Get directional velocities in R^2 for the two points.
+            auto velocity_u = movetk_core::get_velocity<GeomKernel>(
                 std::get<SpeedIdx>(probe_u),
                 std::get<HeadingIdx>(probe_u));
-            typename InterpolationTraits::MovetkVector velocity_v = movetk_core::get_velocity<typename InterpolationTraits::GeometryTraits>(
+            auto  velocity_v = movetk_core::get_velocity<GeomKernel>(
                 std::get<SpeedIdx>(probe_v),
                 std::get<HeadingIdx>(probe_v));
+            // Vector difference of the velocities.
+            const auto delta_velocity = velocity_v - velocity_u;
 
-            typename InterpolationTraits::MovetkVector delta_velocity = velocity_v - velocity_u;
-
-            typename InterpolationTraits::MovetkVector delta_position = p_v - p_u;
+            auto delta_position = p_v - p_u;
 
             auto t_u = std::get<TsIdx>(probe_u);
             auto t_v = std::get<TsIdx>(probe_v);
@@ -234,58 +233,53 @@ namespace movetk_algorithms
             auto delta_t = t_v - t_u;
             auto delta_t_squared = delta_t * delta_t;
             auto delta_t_cube = delta_t_squared * delta_t;
-            typename InterpolationTraits::NT interval = static_cast<typename InterpolationTraits::NT>(delta_t);
+            auto interval = static_cast<typename InterpolationTraits::NT>(delta_t);
 
-            typename InterpolationTraits::NT norm_delta_velocity = norm(delta_velocity);
-            typename InterpolationTraits::NT norm_delta_position = norm(delta_position);
-            typename InterpolationTraits::NT displacement = norm ^ 1;
+            auto norm_delta_velocity = norm(delta_velocity);
+            auto norm_delta_position = norm(delta_position);
+            auto displacement = norm ^ 1; //Actual norm (P=2 assumed?)
 
+            // Assign velocity if incorrect?
             if (norm_delta_position > MOVETK_EPS && norm_delta_velocity < MOVETK_EPS)
             {
-                typename InterpolationTraits::NT speed_v = displacement / delta_t;
-                velocity_v = movetk_core::get_velocity<typename InterpolationTraits::GeometryTraits>(speed_v,
-                                                                                                     std::get<HeadingIdx>(
-                                                                                                         probe_v));
+                NT speed_v = displacement / delta_t;
+                velocity_v = movetk_core::get_velocity<GeomKernel>(speed_v,std::get<HeadingIdx>(probe_v));
                 std::get<SpeedIdx>(probe_v) = speed_v;
             }
 
-            typename InterpolationTraits::MovetkVector scaled_velocity = scale(velocity_u, delta_t);
+            auto scaled_velocity = scale(velocity_u, delta_t);
 
-            typename InterpolationTraits::NT numerator =
-                movetk_core::get_x<typename InterpolationTraits::GeometryTraits>(delta_position) -
-                movetk_core::get_x<typename InterpolationTraits::GeometryTraits>(scaled_velocity) -
-                movetk_core::get_x<typename InterpolationTraits::GeometryTraits>(delta_velocity) / 2.0;
-            typename InterpolationTraits::NT denominator = delta_t_cube / 6.0 - delta_t_squared / 4.0;
-            typename InterpolationTraits::NT m_x = numerator / denominator;
+            NT numerator =
+                movetk_core::get_x<GeomKernel>(delta_position) -
+                movetk_core::get_x<GeomKernel>(scaled_velocity) -
+                movetk_core::get_x<GeomKernel>(delta_velocity) / 2.0;
+            NT denominator = delta_t_cube / 6.0 - delta_t_squared / 4.0;
+            NT m_x = numerator / denominator;
 
-            numerator = movetk_core::get_y<typename InterpolationTraits::GeometryTraits>(delta_position) -
-                        movetk_core::get_y<typename InterpolationTraits::GeometryTraits>(scaled_velocity) -
-                        movetk_core::get_y<typename InterpolationTraits::GeometryTraits>(delta_velocity) / 2.0;
-            typename InterpolationTraits::NT m_y = numerator / denominator;
+            numerator = movetk_core::get_y<GeomKernel>(delta_position) -
+                        movetk_core::get_y<GeomKernel>(scaled_velocity) -
+                        movetk_core::get_y<GeomKernel>(delta_velocity) / 2.0;
+            NT m_y = numerator / denominator;
 
-            typename InterpolationTraits::NT b_x =
-                movetk_core::get_x<typename InterpolationTraits::GeometryTraits>(delta_velocity) / delta_t_squared -
-                m_x / 2.0;
-            typename InterpolationTraits::NT b_y =
-                movetk_core::get_y<typename InterpolationTraits::GeometryTraits>(delta_velocity) / delta_t_squared -
-                m_y / 2.0;
+            NT b_x = movetk_core::get_x<GeomKernel>(delta_velocity) / delta_t_squared - m_x / 2.0;
+            NT b_y = movetk_core::get_y<GeomKernel>(delta_velocity) / delta_t_squared - m_y / 2.0;
 
-            typename InterpolationTraits::MovetkPoint m = make_point({m_x, m_y});
-            typename InterpolationTraits::MovetkPoint b = make_point({b_x, b_y});
+            auto m = make_point({m_x, m_y});
+            auto b = make_point({b_x, b_y});
 
-            typename InterpolationTraits::MovetkVector v1 = scale(b, ORIGIN, delta_t_squared);
-            typename InterpolationTraits::MovetkVector v2 = scale(m, ORIGIN, delta_t_squared / 2.0);
+            auto v1 = scale(b, ORIGIN, delta_t_squared);
+            auto v2 = scale(m, ORIGIN, delta_t_squared / 2.0);
 
-            typename InterpolationTraits::MovetkVector rhs = v1 + v2;
-            typename InterpolationTraits::MovetkVector eps = delta_velocity - rhs;
-            assert(eps * eps < MOVETK_EPS);
+            auto rhs = v1 + v2;
+            //auto eps = delta_velocity - rhs;
+            //assert(eps * eps < MOVETK_EPS);
 
             v1 = scale(b, ORIGIN, delta_t_squared / 2.0);
             v2 = scale(m, ORIGIN, delta_t_squared / 6.0);
 
             rhs = v1 + v2;
-            eps = delta_position - scaled_velocity - rhs;
-            assert(eps * eps < MOVETK_EPS);
+            //eps = delta_position - scaled_velocity - rhs;
+            //assert(eps * eps < MOVETK_EPS);
 
             std::size_t num_elements = std::distance(first, beyond);
 
@@ -388,19 +382,11 @@ namespace movetk_algorithms
                 auto vit = std::begin(velocities);
                 while (++ip_it != (ip_beyond - 1))
                 {
-                    typename InterpolationTraits::NT heading_v = std::get<HeadingIdx>(*ip_it);
-                    //std::cout<<std::get<0>(probe_u)<<",";
-                    //std::cout<<*vit<<",";
-                    //std::cout<<cos( movetk_core::deg2radians(heading_v) )<<",";
-                    //typename InterpolationTraits::NT speed_v = abs( movetk_core::get_x<typename InterpolationTraits::GeometryTraits>(*vit) / cos( movetk_core::deg2radians(heading_v) ));
-                    //std::cout<<speed_v<<",";
-                    typename InterpolationTraits::NT squared_length = norm(*vit);
-                    typename InterpolationTraits::NT speed_v = norm ^ 1;
-                    //std::cout<<length<<",";
-                    //std::cout<<abs(length - speed_v)<<"\n";
-                    //std::get<SpeedIdx>(*ip_it) = speed_v;
+                    NT heading_v = std::get<HeadingIdx>(*ip_it);
+                    NT squared_length = norm(*vit);
+                    NT speed_v = norm ^ 1;
                     std::get<SpeedIdx>(*ip_it) = speed_v;
-                    vit++;
+                    ++vit;
                 }
             }
             std::move(ip_first, ip_beyond, result);

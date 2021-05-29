@@ -39,8 +39,8 @@ using std::tuple;
 #include <array>
 #include <exception>
 #include <utility>
-#include "TuplePrinter.h"
-#include "movetk/TrajectoryTraits.h"
+#include "movetk/io/TuplePrinter.h"
+#include "movetk/io/TrajectoryTraits.h"
 #include "movetk/algo/PolylineUtils.h"
 #include "movetk/algo/Interpolation.h"
 
@@ -335,8 +335,11 @@ public:
         }
 
         bool operator==(FieldIterator const &other) {
-            return (this->underlying_iterator() == other.underlying_iterator()) ||
-                   (_parent == nullptr && other._parent == nullptr);
+            if(_parent == nullptr || other._parent == nullptr)
+            {
+                return _parent == nullptr && other._parent == nullptr;
+            }
+            return this->underlying_iterator() == other.underlying_iterator();
         }
 
         bool operator!=(FieldIterator const &other) {

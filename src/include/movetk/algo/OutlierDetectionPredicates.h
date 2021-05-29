@@ -33,14 +33,13 @@
 
 #include "movetk/geom/GeometryInterface.h"
 #include "movetk/utils/TrajectoryUtils.h"
-#include "movetk/CartesianProbeTraits.h"
+#include "movetk/io/CartesianProbeTraits.h"
 #include <iterator>
 #include <algorithm>
 
 namespace movetk_algorithms {
 
     namespace outlier_detection{
-        //using speed_test_tag = movetk_algorithms::outlier_detection_traits::linear_speed_bounded_test_tag;
 
         template<class TestTag,
                 class CoordinateTag,

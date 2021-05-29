@@ -25,9 +25,10 @@ using std::string;
 #include <tuple>
 #include "movetk/io/csv/ParseDate.h"
 #include "movetk/utils/HereProbeTraits.h"
-#include "movetk/TuplePrinter.h"
-#include "movetk/SortByField.h"
+#include "movetk/io/TuplePrinter.h"
+#include "movetk/io/SortByField.h"
 
+// TODO: this test case tests established STL functionality
 TEST_CASE( "ProbePoint can be sorted", "[probepoint]" ) {
 
     using ProbePoint = std::tuple<string, ParseDate, float>;

@@ -193,8 +193,7 @@ namespace movetk_algorithms
             std::size_t NumElements = std::distance(first, beyond);
             algorithm(first, beyond, movetk_core::movetk_back_insert_iterator(edges1));
 
-            std::reverse(first, beyond);
-            algorithm(first, beyond, movetk_core::movetk_back_insert_iterator(edges2));
+            algorithm(std::make_reverse_iterator(beyond), std::make_reverse_iterator(first), movetk_core::movetk_back_insert_iterator(edges2));
 
             for (auto &edge : edges2)
             {
@@ -217,7 +216,6 @@ namespace movetk_algorithms
                 return (i.second < j.second);
             });
 
-            std::reverse(first, beyond);
             std::set_intersection(std::begin(edges1), std::end(edges1),
                                   std::begin(edges2), std::end(edges2), result, [](auto &i, auto &j) {
                                       return (i.first < j.first) || (i.second < j.second);

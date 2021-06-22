@@ -485,8 +485,8 @@ namespace movetk_core
         bool upper_right = false, lower_left = false;
         bool lower_right = false, upper_left = false;
 
-        void construct(typename GeometryTraits::MovetkPoint &p,
-                       typename GeometryTraits::MovetkPoint &center,
+        void construct(const typename GeometryTraits::MovetkPoint &p,
+            const typename GeometryTraits::MovetkPoint &center,
                        typename GeometryTraits::NT radius)
         {
             NT m1, m2, c1, c2, tanA, tanB;
@@ -587,8 +587,8 @@ namespace movetk_core
     public:
         Wedge() = default;
 
-        Wedge(typename GeometryTraits::MovetkPoint &p,
-              typename GeometryTraits::MovetkPoint &center,
+        Wedge(const typename GeometryTraits::MovetkPoint &p,
+            const typename GeometryTraits::MovetkPoint &center,
               typename GeometryTraits::NT radius)
         {
             construct(p, center, radius);
@@ -601,11 +601,15 @@ namespace movetk_core
             construct(p, center, radius);
         }
 
-        Wedge(typename GeometryTraits::MovetkVector &slope,
-              typename GeometryTraits::MovetkVector &intercept) : _slope(slope),
+        Wedge(const typename GeometryTraits::MovetkVector &slope,
+            const typename GeometryTraits::MovetkVector &intercept) : _slope(slope),
                                                                   _intercept(intercept) {}
 
         typename GeometryTraits::MovetkVector &slope()
+        {
+            return _slope;
+        }
+        const typename GeometryTraits::MovetkVector &slope()const
         {
             return _slope;
         }
@@ -614,8 +618,12 @@ namespace movetk_core
         {
             return _intercept;
         }
+        const typename GeometryTraits::MovetkVector &intercept() const
+        {
+            return _intercept;
+        }
 
-        bool is_empty()
+        bool is_empty() const
         {
             if (_slope == (ORIGIN - ORIGIN))
             {
@@ -632,7 +640,7 @@ namespace movetk_core
          * @param w
          * @return
          */
-        Wedge operator*(Wedge &w)
+        Wedge operator*(const Wedge &w) const
         {
             constexpr std::size_t size = 2 * Norm::P;
             std::array<std::size_t, size> positions = {0, 1, 2, 3};
@@ -682,7 +690,7 @@ namespace movetk_core
          * @param p
          * @return
          */
-        bool operator*(typename GeometryTraits::MovetkPoint &p)
+        bool operator*(const typename GeometryTraits::MovetkPoint &p)const
         {
             NT mx1 = (make_point({this->_slope * this->e1, -1}) - ORIGIN) * (p - ORIGIN);
             NT mx2 = (make_point({this->_slope * this->e2, -1}) - ORIGIN) * (p - ORIGIN);
